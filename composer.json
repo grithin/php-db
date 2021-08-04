@@ -1,0 +1,23 @@
+{
+    "name": "grithin/db",
+    "description": "Db Interaction And Query Builder",
+    "keywords": ["db"],
+    "license": "GPL-3.0-only",
+    "homepage": "http://github.com/grithin/php-db2",
+    "authors": [
+        {
+            "name": "Adam F Frederick",
+            "email": "bob_bf2@deemit.com"
+        }
+    ],
+	 "require": {
+        "php": ">=5.5.9",
+        "ext-pdo": "*",
+        "grithin/phpbase": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Grithin\\": ["src/"]
+        }
+    }
+}
