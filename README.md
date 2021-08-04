@@ -4,7 +4,7 @@
 I considered the current query builders to be unwieldy and lacking some of the features I built in this one.
 
 ## Caution
-This was a personal project of mine that I built in a day.  Since I decided to stop buiding projects in PHP, in favor of node, this code has not seen production nor does it have unit tests.
+This was a personal project of mine that I built in a day.  Since I decided to stop building projects in PHP, in favor of node, this code has not seen production nor does it have unit tests.
 
 
 
