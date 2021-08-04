@@ -4,7 +4,7 @@
 I considered the current query builders to be unwieldy and lacking some of the features I built in this one.
 
 ## Caution
-This was a personal project of mine that I built in a day.  Since I decided to stop building projects in PHP, in favor of node, this code has not seen production nor does it have unit tests.
+This was a personal project of mine that I built in a day.  Since I decided to stop building projects in PHP, in favor of node, this code has not seen production nor does it have unit tests.  Also, I was writing this readme as I was coding, so it may be off.
 
 
 
@@ -48,7 +48,7 @@ $r = $db(['select * from test where name = ?', ['bill']])->row();
 
 ```php
 ### Grouped Logic ###
-$db->build(['bob'=>'sue', 'age'=>123])
+$db->where(['bob'=>'sue', 'age'=>123])
 	->or(['age'=>5])('name', 'like', '%bob%')
 	->and('x', 'y');
 
@@ -66,7 +66,7 @@ AND  ( `x` = ? )
 
 ### Composition ###
 $where1 = $db->build('age', 5);
-$db->build(['bob'=>'sue'])->not($where1);
+$db->where(['bob'=>'sue'])->not($where1);
 
 /*>
 (
@@ -77,7 +77,7 @@ $db->build(['bob'=>'sue'])->not($where1);
 
 
 ### Basic Full ###
-$db->build('name', 'bob')
+$db->where('name', 'bob')
 	->or('name', 'like', 'b%')
 	->from('users')
 	->select(['name', 'COUNT()'])
