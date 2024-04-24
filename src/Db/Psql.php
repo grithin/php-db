@@ -1,4 +1,9 @@
 <?php
+/* About
+Functions regarding a special variable type that is an array of the form
+[sql_string, variables] or [sql_string]
+*/
+
 
 namespace Grithin\Db;
 
@@ -77,6 +82,11 @@ class Psql{
 		}
 	}
 
+	/* take a conforming array and turn it into a Psql object */
+	public static function from_conforming($input){
+		return new Psql($input[0], $input[1]??[]);
+	}
+
 
 	public static function separator_conform($combine=null){
 		if($combine === null){
@@ -96,8 +106,8 @@ class Psql{
 
 	/** determine if a variable conforms to what is recognized as a psql */
 	public static function conforms($x){
-		if(isset($x[0]) && is_string($x[0])){
-			if(!isset($x[0]) || (is_array($x[1]) || is_object($x[1]))){
+		if(is_array($x) && isset($x[0]) && is_string($x[0])){
+			if(!isset($x[1]) || (is_array($x[1]) || is_object($x[1]))){
 				return true;
 			}
 			return false;

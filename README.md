@@ -10,7 +10,9 @@ This was a personal project of mine that I built in a day.  Since I decided to s
 
 ## Initializing
 ```php
+# can use DSN
 $db = new Db(['dsn'=>'sqlite:'.$path]);
+# or array
 $connection_info = [
 	'user'=>'bob',
 	'password'=>'bob',
@@ -18,6 +20,8 @@ $connection_info = [
 	'host'=>'localhost',
 	'driver'=>'mysql'];
 $db = new Db($connection_info);
+# or an existing PDO
+$db = new Db(null, $db->under);
 ```
 
 ## Invoke Variety
@@ -189,7 +193,7 @@ FROM `users`
 LEFT JOIN  (
 	SELECT `name`, `id)`
 	FROM `users`
-	WHERE  ( `name` = ? )  
+	WHERE  ( `name` = ? )
 ) `bob` ON bob.id = users.id
 */
 
@@ -199,6 +203,16 @@ LEFT JOIN  (
 ```
 
 
+
+## Result
+If a result method is called prior the query builder having a run-able SQL, it is assumed the first parameter to the result method is actually the SQL
+
+```php
+# All equivalent
+$db('select id from users')->column();
+$db()->column('select id from users');
+$db->q('select id from users')->column();
+```
 
 ## Notes
 -	if driver `mysql`

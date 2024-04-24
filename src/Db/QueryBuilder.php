@@ -88,6 +88,22 @@ class QueryBuilder{
 		#+ }
 		#+ potentially get a result and format the output {
 		if(method_exists(Result::class, $method)){
+			/* There are 3 cases to account for:
+				1. use of result method after builder construction: $db->where('bob = 1')->from('user')->row()
+				2. use with sql $db->row('select * from user where bob = 1')
+				3. use of sql with result method parameters: $db->key_to_record('select * from users', 'name')
+				4. old form that had ($table, $where) parameters.
+
+
+				#3 would require getting the result method parameter count to determine what to pass to where
+				and what to pass to the result method.
+				#3 and #4 are now not supported
+			*/
+			if(!$this->where_psqls && !$this->from){
+				call_user_func_array([$this, 'where'], $params);
+				$params = [];
+			}
+
 			$r = $this->get();
 			return call_user_func_array([$r, $method], $params);
 		}
@@ -101,6 +117,19 @@ class QueryBuilder{
 	}
 	public function dump(){
 		\Grithin\Debug::out($this->to_psql());
+	}
+
+	# check to see if the state of the QueryBuilder is executable in SQL
+	public function can_not_run(){
+		if(!$this->from && !$this->has_psql()){
+			return true;
+		}
+		return false;
+	}
+
+	/* determine whether this build has psql used for query */
+	public function has_psql(){
+		return (bool)($this->grouping['psql'] || $this->where_psqls);
 	}
 
 
@@ -280,6 +309,11 @@ class QueryBuilder{
 
 	#+ some methods need to be here so as to modify the query prior to running {
 	public function value($name=null){
+		# account for old style where SQL was provided to result method
+		if($this->can_not_run()){
+			call_user_func_array([$this, 'where'], func_get_args());
+			$name = null;
+		}
 		if($name){
 			$this->select($name);
 		}
@@ -290,6 +324,10 @@ class QueryBuilder{
 		return $r->value();
 	}
 	public function row(){
+		# account for old style where SQL was provided to result method
+		if($this->can_not_run()){
+			call_user_func_array([$this, 'where'], func_get_args());
+		}
 		if($this->should_limit()){
 			$this->limit(1);
 		}
@@ -301,6 +339,11 @@ class QueryBuilder{
 		return $this->value() == 1;
 	}
 	public function numeric(){
+		# account for old style where SQL was provided to result method
+		if($this->can_not_run()){
+			call_user_func_array([$this, 'where'], func_get_args());
+		}
+
 		if($this->should_limit()){
 			$this->limit(1);
 		}
@@ -308,7 +351,13 @@ class QueryBuilder{
 		return $r->numeric();
 	}
 	public function column($name=null){
-		if($column){
+		# account for old style where SQL was provided to result method
+		if($this->can_not_run()){
+			call_user_func_array([$this, 'where'], func_get_args());
+			$name = null;
+		}
+
+		if($name){
 			$this->select($name);
 		}
 		$r = $this->get();

@@ -14,7 +14,7 @@ trait ChangeActionsTrait{
 		$psql_aggregate = $this->aggregate_with_from([''], 'DELETE FROM ');
 
 		if(!$this->risky && !$this->grouping['psql']){
-			throw new \Exception('No "where" on replace.  Call "risky()->replace(...)" to run');
+			throw new \Exception('No "where" on delete.  Call "risky()->delete(...)" to run');
 		}
 
 		# where
@@ -24,18 +24,18 @@ trait ChangeActionsTrait{
 
 	public function replace_and_options($args, $options=[]){
 		if($this->driver == 'sqlite'){
-			$type = 'INSERT OR REPLACE';
+			$type = 'INSERT OR REPLACE INTO';
 		}else{
-			$type = 'REPLACE';
+			$type = 'REPLACE INTO';
 		}
 		return $this->into($args, $type);
 	}
 	/** Insert with a table and ignore if duplicate key found */
 	public function insert_ignore_and_options($args, $options=[]){
 		if($this->driver == 'sqlite'){
-			$type = 'INSERT OR IGNORE';
+			$type = 'INSERT OR IGNORE INTO';
 		}else{
-			$type = 'INSERT IGNORE';
+			$type = 'INSERT IGNORE INTO';
 		}
 		return $this->into($args, $type);
 	}
@@ -45,10 +45,10 @@ trait ChangeActionsTrait{
 			$update = $insert;
 		}
 		$this->update_and_options($update, ['hold'=>true]);
-		return $this->into($insert, 'INSERT', ['update'=>true]);
+		return $this->into($insert, 'INSERT INTO', ['update'=>true]);
 	}
 	public function insert_and_options($args, $options=[]){
-		return $this->into($args, 'INSERT', $options);
+		return $this->into($args, 'INSERT INTO', $options);
 	}
 	public $into_psql;
 	/**
@@ -56,6 +56,8 @@ trait ChangeActionsTrait{
 	@return will attempt to get row id, otherwise will return count of affected rows
 	*/
 	public function into($args, $type, $options=[]){
+		static $option_defaults = ['return_id'=>true];
+		$options = array_merge($option_defaults, $options);
 		if($args){
 			$this->into_psql = $this->psql_from_into($args, $options);
 		}elseif(!$this->into_psql){
@@ -68,13 +70,16 @@ trait ChangeActionsTrait{
 		}
 		#+ }
 
-		$psql_aggregate = $this->into_psql();
+		$psql_aggregate = $this->into_psql($type);
 
 		$result = $this->db->q($psql_aggregate);
 		$result->resolve_id();
+		if($options['return_id']){
+			return $result->id;
+		}
 		return $result;
 	}
-	public function into_psql(){
+	public function into_psql($type){
 		$psql_aggregate = $this->aggregate_with_from([''], $type);
 
 		# set
@@ -100,7 +105,7 @@ trait ChangeActionsTrait{
 
 
 	public $update_psql = [];
-	public function updates_and_options($args, $options=[]){
+	public function update_and_options($args, $options=[]){
 		if($args){
 			$this->update_psql = $this->psql_from_update($args, $options);
 		}elseif(!$this->update_psql){
@@ -114,7 +119,7 @@ trait ChangeActionsTrait{
 		#+ }
 
 		#+ validate {
-		if(!$this->risky && !$this->grouping['psql']){
+		if(!$this->risky && !$this->has_psql()){
 			throw new \Exception('No "where" on update.  Call "risky()->update(...)" to run');
 		}
 		#+ }
@@ -135,6 +140,4 @@ trait ChangeActionsTrait{
 		$psql_aggregate = $this->aggregate_with_where($psql_aggregate);
 		return $psql_aggregate;
 	}
-
-
 }

@@ -5,6 +5,7 @@ namespace Grithin\Db\QueryBuilder;
 use \Grithin\Db;
 use \Grithin\Db\Psql;
 use \Grithin\Db\Result;
+use \Grithin\Tool;
 use \Grithin\Dictionary;
 
 trait ConformInputTrait{
@@ -101,7 +102,13 @@ trait ConformInputTrait{
 				throw new \Exception('Unrecognized where argument');
 			}
 		}elseif($count == 2){
-			return $this->psql_from_into_params($args[0], $args[1], '=', $options);
+			if(is_array($args[1])){
+				# handle old style inputs of the form ->insert($table, $set_dictionary);
+				$this->table($args[0]);
+				return $this->psql_from_into([$args[1]], $options);
+			}else{
+				return $this->psql_from_into_params($args[0], $args[1], '=', $options);
+			}
 		}elseif($count == 3){
 			# the 3rd value is actually the options, so recall
 			return $this->psql_from_into(array_slice($args,0,2), $args[2]);
@@ -199,13 +206,13 @@ trait ConformInputTrait{
 			}elseif(is_array($args[0])|| is_object($args[0])){
 				# check if it is a dictionary
 				if(is_array($args[0]) && !Dictionary::is($args[0])){
-					/* if it is not a dictionary, it is probably intennded as [field, compare, value]
+					/* if it is not a dictionary, it is probably intended as [field, compare, value]
 					so recall this method with it as the args */
 					return $this->psql_from_update($args[0], $options);
 				}
 				# it's an arrayable, assume '=' comparison of key to value
 				$psqls = $this->psqls_from_update_array($args[0], $options);
-				return Psql::many_to_one($psqls, 'and');
+				return Psql::many_to_one($psqls, ',');
 			}elseif(is_string($args[0])){
 				# it's a string, turn it into a psql and add it
 				return $this->psql_apply_options([$args[0]], $options);
@@ -257,6 +264,10 @@ trait ConformInputTrait{
 	#+ } ======== update functions ======== }
 
 	#+ { ======== where functions ======== {
+	/* turn what is passed to where() into psql
+
+	$args will always be an array: the args passed to where()
+	*/
 	public function psql_from_where($args, $options=[]){
 		static $class = __CLASS__;
 
@@ -278,6 +289,9 @@ trait ConformInputTrait{
 				# it's an arrayable, assume '=' comparison of key to value
 				$psqls = $this->psqls_from_where_array($args[0], $options);
 				return Psql::many_to_one($psqls, 'and');
+			}elseif(Tool::is_int($args[0])){
+				# it's an id, turn it into a id where
+				return $this->psql_from_where([['id', $args[0]]], $options);
 			}elseif(is_string($args[0])){
 				# it's a string, turn it into a psql and add it
 				return $this->psql_apply_options([$args[0]], $options);

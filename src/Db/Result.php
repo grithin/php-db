@@ -31,7 +31,6 @@ class Result{
 	}
 	/** rows with columns keyed by column name */
 	public function rows(){
-		$res = $this->as_conform_res(func_get_args());
 		$res2 = [];
 		$i = 0;
 		while($row=$this->res->fetch(\PDO::FETCH_ASSOC)){
@@ -52,7 +51,7 @@ class Result{
 	}
 
 	/** rows with columns numerically keyed */
-	public function numerics($res){
+	public function numerics(){
 		$res2 = [];
 		while($row = $this->res->fetch(\PDO::FETCH_NUM)){
 			$res2[]=$row;

@@ -22,7 +22,7 @@ trait ConnectionTrait{
 		}
 	*/
 	public function __construct($connection_info=[], $options=[]){
-		$this->connection_info = $connection_info;
+		$this->connection_info = $connection_info ?: [];
 		$this->quote_style = '`';
 		$this->options = array_merge(['sql_mode'=>'ANSI'], $options);;
 		if(!empty($options['pdo'])){
@@ -36,7 +36,7 @@ trait ConnectionTrait{
 			}elseif(!empty($connection_info['dsn'])){
 				$this->driver = explode(':', $connection_info['dsn'], 2)[0];
 			}else{
-				throw new \Exception('missing driver');
+				throw new \Exception('driver not provided.  Please provide either a `dsn` key or a `driver` key');
 			}
 		}
 	}

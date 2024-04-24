@@ -31,7 +31,7 @@ trait QueryBasicTrait{
 
 		# caching
 		if($use_cache && strlen($v)<=250){ # no reason to expect multiple occurrence of same long text quotes
-			if(!$this->quote_cache[$v]){
+			if(!isset($this->quote_cache[$v])){
 				$this->quote_cache[$v] = $this->under->quote($v);
 			}
 			return $this->quote_cache[$v];
@@ -53,6 +53,11 @@ trait QueryBasicTrait{
 			$identity = implode($quote.'.'.$quote,explode('.',$identity));
 		}
 		return $identity;
+	}
+
+	# deprecated, use identity_quote
+	public function quote_identity($identity,$separation=true){
+		return call_user_func_array([$this,'identity_quote'],func_get_args());
 	}
 	/** return last run sql */
 	public function last_sql(){
@@ -77,9 +82,7 @@ trait QueryBasicTrait{
 
 
 		# Generate a prepared statement
-		if(is_array($sql)){
-			$sql = $this->prepare($sql);
-		}elseif($sql instanceof Psql){
+		if(is_array($sql) || $sql instanceof Psql){
 			$sql = $this->prepare($sql);
 		}
 
@@ -120,9 +123,8 @@ trait QueryBasicTrait{
 		$this->ensure_loaded(); # lazy loading
 
 		if(is_array($psql)){
-			$psql = Psql::many_to_one($psql);
+			$psql = Psql::from_conforming($psql);
 		}
-
 
 		if($this->result){
 			$this->result->closeCursor();
@@ -152,7 +154,7 @@ trait QueryBasicTrait{
 		-	as params: $db->exec('select * from','user where id = :id',[':id'=>1],'and id = :id2',[':id2'=>1] );
 	*/
 	public function exec(){
-		return $this->query(call_user_func_array([$this,'prepare'], func_get_args()));
+		return $this->query(call_user_func([$this,'prepare'], func_get_args()));
 	}
 
 }
